@@ -594,7 +594,20 @@ const Goals = ({ goals, setGoals, isMentorMode }: { goals: Goal[], setGoals: Rea
                                                   onChange={e => updateActionStep(step.id, 'text', e.target.value)}
                                               />
                                           </div>
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                               <div>
+                                                  <label className="text-xs font-bold text-earth-500 uppercase mb-1">Frequency</label>
+                                                  <select 
+                                                      className="w-full bg-white border border-earth-200 p-2 rounded-lg text-sm"
+                                                      value={step.frequency || 'Once'}
+                                                      onChange={e => updateActionStep(step.id, 'frequency', e.target.value)}
+                                                  >
+                                                      <option value="Once">Once</option>
+                                                      <option value="Daily">Daily</option>
+                                                      <option value="Weekly">Weekly</option>
+                                                      <option value="Monthly">Monthly</option>
+                                                  </select>
+                                               </div>
                                                <div>
                                                   <label className="text-xs font-bold text-earth-500 uppercase mb-1">Days & Times</label>
                                                   <div className="flex gap-2">
@@ -1279,7 +1292,7 @@ const Calendar = ({ goals, notes, meetings, addMeeting }: { goals: Goal[], notes
     const [newMeeting, setNewMeeting] = useState<Partial<MentorMeeting>>({ date: '', time: '', topic: '' });
 
     const upcomingEvents = [
-        ...goals.filter(g => g.timeBound.dueDate).map(g => ({ type: 'GOAL', date: g.timeBound.dueDate, title: `Goal Due: ${g.title}`, id: g.id })),
+        ...goals.filter(g => g.timeBound.dueDate).map(g => ({ type: 'GOAL', date: g.timeBound.dueDate, title: `Goal Due: ${g.title}`, id: g.id, time: undefined })),
         ...meetings.map(m => ({ type: 'MEETING', date: m.date, title: `Mentor Meeting: ${m.topic}`, id: m.id, time: m.time }))
     ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
