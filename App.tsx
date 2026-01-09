@@ -44,8 +44,8 @@ import {
   Bookmark
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
-import { getDailyQuote, getBibleVerse, getMentorshipAdvice, analyzeDecision } from './services/geminiService';
-import VoiceInput from './components/VoiceInput';
+import { getDailyQuote, getBibleVerse, getMentorshipAdvice, analyzeDecision } from './geminiService';
+import VoiceInput from './VoiceInput';
 import { Goal, BibleNote, ChatMessage, Decision, LifePlanSection, View, ActionStep, EvaluationLog, EvaluationDetails, MentorMeeting, UserProfile, UserRole, SavedQuote } from './types';
 
 // --- Helper Components ---
@@ -1139,415 +1139,149 @@ const Dashboard = ({
       )}
     </div>
   );
-};
+}
 
-const LifePlan = () => {
-    const [activeTab, setActiveTab] = useState('Purpose');
-    const [sections, setSections] = useState<Record<string, string>>({
-        Purpose: "To glorify God by...",
-        Vision: "I see a future where...",
-        Mission: "I will achieve this by...",
-        Values: "Integrity, Compassion, ..."
-    });
-
-    const handleUpdate = (val: string) => {
-        setSections(prev => ({ ...prev, [activeTab]: val }));
-    };
-
-    return (
-        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-32">
-             <div className="bg-earth-100 p-8 rounded-3xl text-earth-800 shadow-sm border border-earth-200">
-                <h2 className="text-3xl font-serif font-bold">Life Plan</h2>
-                <p className="opacity-80 mt-2">Defined by your roots.</p>
-             </div>
-
-             <div className="bg-white rounded-3xl shadow-sm border border-earth-100 overflow-hidden min-h-[500px] flex flex-col md:flex-row">
-                 <div className="w-full md:w-64 bg-earth-50 p-4 border-r border-earth-100 flex flex-row md:flex-col gap-2 overflow-x-auto">
-                     {Object.keys(sections).map(key => (
-                         <button 
-                            key={key}
-                            onClick={() => setActiveTab(key)}
-                            className={`p-4 rounded-xl font-bold text-left transition-all ${activeTab === key ? 'bg-white shadow-md text-nature-700 border border-earth-100' : 'text-earth-500 hover:bg-earth-100'}`}
-                         >
-                             {key}
-                         </button>
-                     ))}
-                 </div>
-                 <div className="flex-1 p-8">
-                     <h3 className="text-2xl font-bold text-earth-800 mb-4">{activeTab}</h3>
-                     <textarea 
-                        className="w-full h-[400px] p-6 bg-earth-50 rounded-2xl border border-earth-200 outline-none focus:ring-2 focus:ring-nature-200 resize-none font-serif text-lg leading-relaxed text-earth-700"
-                        value={sections[activeTab]}
-                        onChange={e => handleUpdate(e.target.value)}
-                     />
-                 </div>
-             </div>
-        </div>
-    );
-};
-
-const Bible = ({ notes, setNotes }: { notes: BibleNote[], setNotes: React.Dispatch<React.SetStateAction<BibleNote[]>> }) => {
-    const [reference, setReference] = useState('');
-    const [verseText, setVerseText] = useState('');
-    const [note, setNote] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const handleSearch = async () => {
-        if (!reference) return;
-        setLoading(true);
-        const text = await getBibleVerse(reference);
-        setVerseText(text);
-        setLoading(false);
-    };
-
-    const handleSave = () => {
-        if (!reference || !verseText) return;
-        const newNote: BibleNote = {
-            id: Date.now().toString(),
-            reference,
-            text: verseText,
-            note,
-            date: new Date().toISOString()
-        };
-        setNotes(prev => [newNote, ...prev]);
-        setNote('');
-        setReference('');
-        setVerseText('');
-    };
-
-    return (
-        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-32">
-            <div className="flex justify-between items-center">
-                 <h2 className="text-3xl font-serif font-bold text-earth-900">Scripture & Notes</h2>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl shadow-lg border border-earth-100">
-                <div className="flex gap-2 mb-4">
-                    <input 
-                        className="flex-1 p-3 bg-earth-50 border border-earth-200 rounded-xl font-bold"
-                        placeholder="Enter Reference (e.g. Psalm 23:1)"
-                        value={reference}
-                        onChange={e => setReference(e.target.value)}
-                        onKeyPress={e => e.key === 'Enter' && handleSearch()}
-                    />
-                    <button 
-                        onClick={handleSearch}
-                        disabled={loading}
-                        className="bg-earth-800 text-white px-6 rounded-xl font-bold hover:bg-earth-900 disabled:opacity-50"
-                    >
-                        {loading ? <Loader2 className="animate-spin"/> : 'Search'}
-                    </button>
-                </div>
-
-                {verseText && (
-                    <div className="mb-6 animate-slide-down">
-                        <blockquote className="border-l-4 border-nature-500 pl-4 py-2 italic text-lg text-earth-700 bg-earth-50 rounded-r-xl mb-4">
-                            "{verseText}"
-                        </blockquote>
-                        <textarea 
-                            className="w-full p-4 bg-earth-50 border border-earth-200 rounded-xl min-h-[100px] outline-none focus:ring-2 focus:ring-nature-200"
-                            placeholder="Write your reflection here..."
-                            value={note}
-                            onChange={e => setNote(e.target.value)}
-                        />
-                        <div className="flex justify-end mt-2">
-                            <button onClick={handleSave} className="flex items-center gap-2 bg-nature-600 text-white px-4 py-2 rounded-xl font-bold shadow-md hover:bg-nature-700">
-                                <Save size={18}/> Save Note
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {notes.map(n => (
-                    <div key={n.id} className="bg-white p-5 rounded-2xl border border-earth-200 shadow-sm hover:shadow-md transition-shadow group relative">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setNotes(prev => prev.filter(x => x.id !== n.id)) }}
-                            className="absolute top-2 right-2 text-earth-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <Trash2 size={16}/>
-                        </button>
-                        <h4 className="font-bold text-earth-900 mb-1 flex items-center gap-2"><BookOpen size={16} className="text-nature-600"/> {n.reference}</h4>
-                        <p className="text-earth-500 text-xs mb-3">{new Date(n.date).toLocaleDateString()}</p>
-                        <p className="text-earth-700 italic text-sm border-l-2 border-earth-200 pl-2 mb-2 line-clamp-2">"{n.text}"</p>
-                        <p className="text-earth-800 text-sm mt-2">{n.note}</p>
-                    </div>
-                ))}
-                {notes.length === 0 && (
-                    <div className="md:col-span-2 text-center py-12 text-earth-400">
-                        <BookOpen size={48} className="mx-auto mb-4 opacity-20"/>
-                        <p>No notes yet. Search a verse to begin.</p>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const Calendar = ({ goals, notes, meetings, addMeeting }: { goals: Goal[], notes: BibleNote[], meetings: MentorMeeting[], addMeeting: (m: MentorMeeting) => void }) => {
-    // Simplified Calendar View
-    const today = new Date();
-    const [showSchedule, setShowSchedule] = useState(false);
-    const [newMeeting, setNewMeeting] = useState<Partial<MentorMeeting>>({ date: '', time: '', topic: '' });
-
-    const upcomingEvents = [
-        ...goals.filter(g => g.timeBound.dueDate).map(g => ({ type: 'GOAL', date: g.timeBound.dueDate, title: `Goal Due: ${g.title}`, id: g.id, time: undefined })),
-        ...meetings.map(m => ({ type: 'MEETING', date: m.date, title: `Mentor Meeting: ${m.topic}`, id: m.id, time: m.time }))
-    ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    const handleSchedule = () => {
-        if (newMeeting.date && newMeeting.time && newMeeting.topic) {
-            addMeeting({
-                id: Date.now().toString(),
-                date: newMeeting.date,
-                time: newMeeting.time,
-                topic: newMeeting.topic,
-                status: 'SCHEDULED'
-            });
-            setShowSchedule(false);
-            setNewMeeting({ date: '', time: '', topic: '' });
-        }
-    };
-
-    return (
-        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-32">
-             <div className="flex justify-between items-center">
-                 <h2 className="text-3xl font-serif font-bold text-earth-900">Calendar</h2>
-                 <button onClick={() => setShowSchedule(true)} className="bg-earth-800 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2">
-                     <Plus size={20}/> Schedule Meeting
-                 </button>
-             </div>
-
-             {showSchedule && (
-                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-earth-100 animate-slide-down">
-                     <h3 className="font-bold text-earth-800 mb-4">Schedule Mentor Meeting</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                         <input type="date" className="p-3 bg-earth-50 border rounded-xl" value={newMeeting.date} onChange={e => setNewMeeting({...newMeeting, date: e.target.value})} />
-                         <input type="time" className="p-3 bg-earth-50 border rounded-xl" value={newMeeting.time} onChange={e => setNewMeeting({...newMeeting, time: e.target.value})} />
-                     </div>
-                     <input className="w-full p-3 bg-earth-50 border rounded-xl mb-4" placeholder="Topic to discuss..." value={newMeeting.topic} onChange={e => setNewMeeting({...newMeeting, topic: e.target.value})} />
-                     <div className="flex gap-2">
-                         <button onClick={() => setShowSchedule(false)} className="px-4 py-2 text-earth-500 font-bold">Cancel</button>
-                         <button onClick={handleSchedule} className="px-4 py-2 bg-nature-600 text-white rounded-xl font-bold">Confirm</button>
-                     </div>
-                 </div>
-             )}
-
-             <div className="bg-white rounded-3xl shadow-sm border border-earth-100 overflow-hidden">
-                 <div className="p-4 bg-earth-50 border-b border-earth-200 font-bold text-earth-500 uppercase text-xs tracking-wider">Upcoming Events</div>
-                 {upcomingEvents.length === 0 ? (
-                     <div className="p-8 text-center text-earth-400">No upcoming events.</div>
-                 ) : (
-                     <div className="divide-y divide-earth-100">
-                         {upcomingEvents.map((evt, idx) => (
-                             <div key={idx} className="p-4 flex items-center gap-4 hover:bg-earth-50 transition-colors">
-                                 <div className={`p-3 rounded-xl ${evt.type === 'GOAL' ? 'bg-red-100 text-red-600' : 'bg-purple-100 text-purple-600'}`}>
-                                     {evt.type === 'GOAL' ? <Target size={20}/> : <Users size={20}/>}
-                                 </div>
-                                 <div className="flex-1">
-                                     <h4 className="font-bold text-earth-800">{evt.title}</h4>
-                                     <p className="text-xs text-earth-500">{new Date(evt.date).toLocaleDateString(undefined, {weekday: 'long', month: 'long', day: 'numeric'})} {evt.time ? `@ ${evt.time}` : ''}</p>
-                                 </div>
-                             </div>
-                         ))}
-                     </div>
-                 )}
-             </div>
-        </div>
-    );
-};
-
-const Profile = ({ user, setUser, goals, bibleNotes, savedQuotes }: { user: UserProfile, setUser: any, goals: Goal[], bibleNotes: BibleNote[], savedQuotes: SavedQuote[] }) => {
-    return (
-        <div className="max-w-2xl mx-auto space-y-8 animate-fade-in pb-32">
-             <div className="bg-white rounded-3xl p-8 shadow-sm border border-earth-100 text-center">
-                 <div className="w-24 h-24 mx-auto bg-earth-800 rounded-full flex items-center justify-center text-white text-3xl font-serif font-bold mb-4 shadow-lg border-4 border-earth-100">
-                     {user.name.charAt(0)}
-                 </div>
-                 <h2 className="text-2xl font-bold text-earth-900">{user.name}</h2>
-                 <span className="inline-block mt-1 px-3 py-1 bg-nature-100 text-nature-800 text-xs font-bold rounded-full uppercase tracking-wider">{user.role === 'MENTEE' ? 'Planter' : 'Mentor'}</span>
-                 
-                 <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-earth-100">
-                     <div>
-                         <div className="text-2xl font-bold text-earth-800">{goals.filter(g => g.progress === 100).length}</div>
-                         <div className="text-[10px] uppercase text-earth-400 font-bold">Goals Met</div>
-                     </div>
-                     <div>
-                         <div className="text-2xl font-bold text-earth-800">{bibleNotes.length}</div>
-                         <div className="text-[10px] uppercase text-earth-400 font-bold">Notes</div>
-                     </div>
-                     <div>
-                         <div className="text-2xl font-bold text-earth-800">{savedQuotes.length}</div>
-                         <div className="text-[10px] uppercase text-earth-400 font-bold">Quotes</div>
-                     </div>
-                 </div>
-             </div>
-
-             <div className="space-y-4">
-                 <h3 className="font-bold text-earth-800 ml-2">Saved Quotes</h3>
-                 {savedQuotes.map(q => (
-                     <div key={q.id} className="bg-white p-4 rounded-2xl border border-earth-100 shadow-sm">
-                         <p className="font-serif italic text-earth-700 mb-2">"{q.text}"</p>
-                         <p className="text-xs font-bold text-earth-400">— {q.author}</p>
-                     </div>
-                 ))}
-                 {savedQuotes.length === 0 && <p className="text-center text-earth-400 text-sm">No saved quotes yet.</p>}
-             </div>
-             
-             <button onClick={() => setUser(null)} className="w-full py-4 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors">Sign Out</button>
-        </div>
-    );
-};
-
-// --- Main App Layout ---
-
-function App() {
-  const [user, setUser] = useState<UserProfile | null>(null);
+// --- App Component ---
+const App = () => {
+  const [user, setUser] = useState<{ role: UserRole; name: string } | null>(null);
   const [view, setView] = useState<View>(View.DASHBOARD);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [bibleNotes, setBibleNotes] = useState<BibleNote[]>([]);
-  const [mentorMeetings, setMentorMeetings] = useState<MentorMeeting[]>([]);
   const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
   const [dailyQuote, setDailyQuote] = useState<{ text: string; author: string } | null>(null);
-  
-  // Controls if we are VIEWING as a mentor (only available if user role is Mentor)
-  const [isMentorMode, setIsMentorMode] = useState(false);
 
   useEffect(() => {
-    getDailyQuote().then(setDailyQuote);
+    const fetchQuote = async () => {
+      const q = await getDailyQuote();
+      setDailyQuote(q);
+    };
+    fetchQuote();
   }, []);
 
   const handleSignIn = (role: UserRole, name: string) => {
-    setUser({ name, role, joinedAt: Date.now() });
-    setIsMentorMode(role === 'MENTOR'); // Default to mentor view if signing in as mentor
+    setUser({ role, name });
   };
 
-  const handleUpgradeToMentor = () => {
-    if (user) {
-        setUser({ ...user, role: 'MENTOR' });
-        setIsMentorMode(true);
-        // In a real app, show a confetti or celebration modal here
+  const handleSaveQuote = (q: { text: string; author: string }) => {
+    const newQuote: SavedQuote = {
+      id: Date.now().toString(),
+      text: q.text,
+      author: q.author,
+      dateSaved: Date.now()
+    };
+    setSavedQuotes(prev => [...prev, newQuote]);
+  };
+
+  if (!user) {
+    return <SignIn onSignIn={handleSignIn} />;
+  }
+
+  const renderContent = () => {
+    switch (view) {
+      case View.DASHBOARD:
+        return (
+          <Dashboard
+            quote={dailyQuote}
+            goals={goals}
+            bibleNotes={bibleNotes}
+            setView={setView}
+            isMentorMode={user.role === 'MENTOR'}
+            userRole={user.role}
+            onUpgrade={() => setUser(prev => prev ? { ...prev, role: 'MENTOR' } : null)}
+            setGoals={setGoals}
+            onSaveQuote={handleSaveQuote}
+          />
+        );
+      case View.GOALS:
+        return <Goals goals={goals} setGoals={setGoals} isMentorMode={user.role === 'MENTOR'} />;
+      case View.DECISIONS:
+        return <DecisionTool />;
+      case View.MENTORSHIP:
+        return <Mentorship />;
+      case View.COMMUNITY:
+        return <Community />;
+      case View.BIBLE:
+          return (
+            <div className="max-w-4xl mx-auto pb-32 animate-fade-in">
+                 <div className="bg-blue-800 p-8 rounded-3xl text-white shadow-lg mb-6">
+                    <h2 className="text-3xl font-serif font-bold flex items-center gap-3"><BookOpen /> Scripture Study</h2>
+                    <p className="opacity-90 mt-2">Meditate on the word.</p>
+                 </div>
+                 <div className="p-12 text-center bg-white rounded-3xl border border-earth-100 text-earth-400">
+                     <p>Bible Study Module Placeholder</p>
+                 </div>
+            </div>
+          );
+      default:
+        return <div className="p-8 text-center text-earth-500">Feature coming soon...</div>;
     }
   };
 
-  const handleSaveQuote = (quote: { text: string; author: string }) => {
-      setSavedQuotes(prev => [...prev, { id: Date.now().toString(), text: quote.text, author: quote.author, dateSaved: Date.now() }]);
-  };
-
-  const addMentorMeeting = (meeting: MentorMeeting) => {
-      setMentorMeetings(prev => [...prev, meeting]);
-  };
-
-  const NavItem = ({ v, icon: Icon, label }: { v: View, icon: any, label: string }) => (
-    <button 
-      onClick={() => setView(v)}
-      className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all duration-300 ${view === v ? 'text-earth-800 bg-gold-200 shadow-sm' : 'text-earth-500 hover:text-earth-700 hover:bg-earth-100'}`}
-    >
-      <Icon size={24} strokeWidth={view === v ? 2.5 : 2} />
-      <span className="text-[10px] font-bold tracking-wide uppercase">{label}</span>
-    </button>
-  );
-
-  // If not signed in, show SignIn Page
-  if (!user) {
-      return <SignIn onSignIn={handleSignIn} />;
-  }
-
   return (
-    <div className="min-h-screen bg-earth-50 font-sans text-earth-900 flex flex-col">
-      {/* Top Bar (Mobile/Desktop) */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-earth-200 px-6 py-4 flex justify-between items-center transition-colors duration-500">
-         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView(View.DASHBOARD)}>
-            <div className={`${isMentorMode ? 'bg-earth-900' : 'bg-earth-800'} p-2 rounded-lg text-white transition-colors duration-500`}>
-                <Leaf size={20} />
-            </div>
-            <div>
-                <h1 className="text-2xl font-serif font-bold tracking-tight text-earth-900">Arbor</h1>
-                <p className="text-[10px] uppercase tracking-wider text-earth-500 font-bold">{user.role === 'MENTEE' ? 'Planter' : 'Mentor'}</p>
-            </div>
-         </div>
-         <div className="flex items-center gap-4">
-             <button onClick={() => setView(View.CALENDAR)} className="hidden md:block p-2 text-earth-600 hover:bg-earth-100 rounded-full" title="Calendar">
-                 <CalendarIcon size={20} />
-             </button>
-             
-             {/* Only show toggle if user is actually a Mentor */}
-             {user.role === 'MENTOR' && (
-                <button 
-                    onClick={() => setIsMentorMode(!isMentorMode)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${isMentorMode ? 'bg-earth-800 text-white' : 'bg-earth-100 text-earth-600 hover:bg-earth-200'}`}
-                >
-                    <UserCog size={16} />
-                    {isMentorMode ? 'Mentor View' : 'Personal View'}
-                </button>
-             )}
-             
-             <div className="hidden md:flex gap-2 items-center cursor-pointer hover:opacity-80" onClick={() => setView(View.PROFILE)}>
-                <span className="text-sm font-bold text-earth-700">{user.name}</span>
-                <div className="w-10 h-10 rounded-full bg-nature-700 border-2 border-white shadow-md flex items-center justify-center text-white font-serif font-bold overflow-hidden">
-                    {user.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                        user.name.charAt(0)
-                    )}
-                </div>
+    <div className="flex h-screen bg-earth-50">
+       {/* Sidebar for Desktop */}
+       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-earth-900 text-earth-100 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl`}>
+          <div className="p-6 flex justify-between items-center">
+             <div className="text-2xl font-serif font-bold flex items-center gap-2">
+                <Leaf className="text-nature-500" /> Arbor
              </div>
-         </div>
-      </header>
+             <button className="lg:hidden text-earth-400" onClick={() => setIsSidebarOpen(false)}><X /></button>
+          </div>
+          
+          <div className="px-6 mb-6">
+             <div className="flex items-center gap-3 p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                 <div className="w-10 h-10 rounded-full bg-nature-600 flex items-center justify-center font-bold text-white">
+                     {user.name.charAt(0)}
+                 </div>
+                 <div className="overflow-hidden">
+                     <p className="font-bold text-white truncate">{user.name}</p>
+                     <p className="text-xs text-earth-300 uppercase font-bold tracking-wider">{user.role}</p>
+                 </div>
+             </div>
+          </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-        {view === View.DASHBOARD && (
-            <Dashboard 
-                quote={dailyQuote} 
-                goals={goals}
-                bibleNotes={bibleNotes} 
-                setView={setView} 
-                isMentorMode={isMentorMode} 
-                userRole={user.role}
-                onUpgrade={handleUpgradeToMentor}
-                setGoals={setGoals}
-                onSaveQuote={handleSaveQuote}
-            />
-        )}
-        {view === View.LIFE_PLAN && <LifePlan />}
-        {view === View.GOALS && <Goals goals={goals} setGoals={setGoals} isMentorMode={isMentorMode} />}
-        {view === View.DECISIONS && <DecisionTool />}
-        {view === View.BIBLE && <Bible notes={bibleNotes} setNotes={setBibleNotes} />}
-        {view === View.MENTORSHIP && <Mentorship />}
-        {view === View.COMMUNITY && <Community />}
-        {view === View.CALENDAR && <Calendar goals={goals} notes={bibleNotes} meetings={mentorMeetings} addMeeting={addMentorMeeting} />}
-        {view === View.PROFILE && <Profile user={user} setUser={setUser} goals={goals} bibleNotes={bibleNotes} savedQuotes={savedQuotes} />}
-      </main>
+          <nav className="flex-1 px-4 space-y-2 py-4 overflow-y-auto">
+             <button onClick={() => { setView(View.DASHBOARD); setIsSidebarOpen(false); }} className={`flex items-center gap-3 w-full p-3 rounded-xl transition-colors ${view === View.DASHBOARD ? 'bg-nature-700 text-white font-bold' : 'text-earth-300 hover:bg-white/10 hover:text-white'}`}>
+                <LayoutDashboard size={20}/> Dashboard
+             </button>
+             <button onClick={() => { setView(View.GOALS); setIsSidebarOpen(false); }} className={`flex items-center gap-3 w-full p-3 rounded-xl transition-colors ${view === View.GOALS ? 'bg-nature-700 text-white font-bold' : 'text-earth-300 hover:bg-white/10 hover:text-white'}`}>
+                <Target size={20}/> Goals
+             </button>
+             <button onClick={() => { setView(View.DECISIONS); setIsSidebarOpen(false); }} className={`flex items-center gap-3 w-full p-3 rounded-xl transition-colors ${view === View.DECISIONS ? 'bg-nature-700 text-white font-bold' : 'text-earth-300 hover:bg-white/10 hover:text-white'}`}>
+                <Compass size={20}/> Decisions
+             </button>
+             <button onClick={() => { setView(View.BIBLE); setIsSidebarOpen(false); }} className={`flex items-center gap-3 w-full p-3 rounded-xl transition-colors ${view === View.BIBLE ? 'bg-nature-700 text-white font-bold' : 'text-earth-300 hover:bg-white/10 hover:text-white'}`}>
+                <BookOpen size={20}/> Bible
+             </button>
+             <button onClick={() => { setView(View.MENTORSHIP); setIsSidebarOpen(false); }} className={`flex items-center gap-3 w-full p-3 rounded-xl transition-colors ${view === View.MENTORSHIP ? 'bg-nature-700 text-white font-bold' : 'text-earth-300 hover:bg-white/10 hover:text-white'}`}>
+                <MessageCircle size={20}/> Mentor
+             </button>
+             <button onClick={() => { setView(View.COMMUNITY); setIsSidebarOpen(false); }} className={`flex items-center gap-3 w-full p-3 rounded-xl transition-colors ${view === View.COMMUNITY ? 'bg-nature-700 text-white font-bold' : 'text-earth-300 hover:bg-white/10 hover:text-white'}`}>
+                <Users size={20}/> Community
+             </button>
+          </nav>
+          <div className="p-6 border-t border-white/10">
+              <button onClick={() => setUser(null)} className="w-full flex items-center gap-3 p-3 rounded-xl text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-all">
+                  <Users size={20}/> Sign Out
+              </button>
+          </div>
+       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-earth-200 p-2 px-4 flex justify-between md:justify-center md:gap-8 z-50 shadow-lg pb-safe">
-        <NavItem v={View.DASHBOARD} icon={LayoutDashboard} label="Home" />
-        <NavItem v={View.LIFE_PLAN} icon={Compass} label="Plan" />
-        <NavItem v={View.GOALS} icon={Target} label="Goals" />
-        <NavItem v={View.CALENDAR} icon={CalendarIcon} label="Calendar" />
-        <NavItem v={View.BIBLE} icon={BookOpen} label="Bible" />
-      </nav>
-
-      {/* Tailwind Utility for Safe Area Padding on Mobile */}
-      <style>{`
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
-        .animate-slide-down { animation: slideDown 0.3s ease-out forwards; }
-        .animate-blob { animation: blob 7s infinite; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .line-through-decoration { text-decoration-color: #663a2f; text-decoration-thickness: 2px; opacity: 0.5; }
-      `}</style>
+       {/* Main Content */}
+       <div className="flex-1 flex flex-col overflow-hidden relative">
+          <div className="lg:hidden p-4 bg-white border-b border-earth-200 flex justify-between items-center z-40">
+             <div className="font-serif font-bold text-xl text-earth-800 flex items-center gap-2">
+                <Leaf className="text-nature-600"/> Arbor
+             </div>
+             <button onClick={() => setIsSidebarOpen(true)} className="p-2"><Menu /></button>
+          </div>
+          <main className="flex-1 overflow-y-auto p-4 md:p-8">
+             {renderContent()}
+          </main>
+       </div>
     </div>
   );
-}
+};
 
 export default App;
