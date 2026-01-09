@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arbor - Growth & Purpose</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              earth: {
+                50: '#fbf7f3',
+                100: '#f5efe8',
+                200: '#eadbc9',
+                300: '#dec0a3',
+                400: '#cf9e78',
+                500: '#c58254',
+                600: '#b96946',
+                700: '#9a533b',
+                800: '#7e4536',
+                900: '#663a2f',
+              },
+              nature: {
+                50: '#f2f9f3',
+                100: '#e1f2e3',
+                200: '#c3e5c8',
+                300: '#97cf9f',
+                400: '#67b374',
+                500: '#469655',
+                600: '#347841',
+                700: '#2b6037',
+                800: '#254d2f',
+                900: '#1f4029',
+              },
+              gold: {
+                50: '#fdfbe9',
+                100: '#fbf6c6',
+                200: '#f7eb8e',
+                300: '#f2db54',
+                400: '#ecca27',
+                500: '#d9ad15',
+                600: '#bb880f',
+                700: '#966311',
+                800: '#7c4f15',
+                900: '#694118',
+              }
+            },
+            fontFamily: {
+              sans: ['Outfit', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #fbf7f3; /* earth-50 */
+        color: #663a2f; /* earth-900 */
+      }
+      /* Custom scrollbar for natural feel */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f5efe8;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #dec0a3;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #c58254;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

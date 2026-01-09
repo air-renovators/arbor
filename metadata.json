@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Arbor - Growth & Purpose",
+  "description": "A holistic personal development app for young adults focusing on leadership, spirituality, and life skills.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
